@@ -7,10 +7,7 @@ const router = express.Router();
 const songs = require('./model/MusicDB'); // Create the Item model
 var cors = require('cors');
 const songsRoutes=require('./routes/songsRoutes');
-
-
-
-
+const userRoutes = require('./routes/userRoutes');
 
 
 mongoose.connect
@@ -30,6 +27,7 @@ mongoose.connect
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(songsRoutes);
+app.use(userRoutes);
 
 
 
