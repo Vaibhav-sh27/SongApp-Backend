@@ -10,8 +10,19 @@ router.post('/user', async (req, res) => {
 	console.log(req.body);
 
 	const alreadyExist = await users.findOne({ $and: [{ email: req.body.email }, { isActive: true }] });
-	if (alreadyExist) {
+	if (alreadyExist && alreadyExist?.password!=="") {
+		console.log(alreadyExist?.password);
 		res.status(200).json({ data: {}, msg: "User Already exist. Please Login" });
+		return;
+	} else if(alreadyExist && alreadyExist?.password===""){
+		try {
+			const user = await users.findByIdAndUpdate(alreadyExist._id, {password: req.body.password});
+			if (!user) throw Error('Something went wrong while updating the user!');
+			res.status(200).json({ data: user, msg: "user updated successfully.  Please Login" });
+		}
+		catch (err) {
+			res.status(400).json({ msg: err })
+		}
 		return;
 	}
 
@@ -50,6 +61,27 @@ router.post('/login', async (req, res) => {
 	}
 	catch (err) {
 		res.status(500).json({ data: {}, msg: err })
+	}
+})
+
+router.post('/google_login', async (req, res) => {
+	const alreadyExist = await users.findOne({ $and: [{ email: req.body.email }, { isActive: true }] });
+	if (alreadyExist) {
+		res.status(200).json({ data: alreadyExist, msg: "User Already exist" });
+		return;
+	}
+
+	try {
+		req.body.createdAt = Date.now();
+		req.body.isActive = true;
+		req.body.isAdmin = false;
+		const user = new users(req.body);
+		const post = await user.save();
+		if (!post) throw Error('Something went wrong while creating the user');
+		res.status(200).json({ data: post, msg: "Registration successfull" });
+	}
+	catch (err) {
+		res.status(400).json({ msg: err })
 	}
 })
 
